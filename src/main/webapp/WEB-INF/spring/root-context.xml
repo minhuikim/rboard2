@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.3.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	
+	<!-- 스프링 빈을 생성하고 DI하는 ApplicationContext에 대한 설정 : 여기에서 빈을 생성한다 -->
+	
+	<!-- connection pool : 데이터베이스에 대한 연결을 미리 만들어 관리. 프로그램은 pool에서 연결을 빌려서 사용하고 반납한다 -->
+	<!-- 				   pool을 이용해 연결을 빌려오고 반납하기 위한 표준 인터페이스가 DataSource -->
+	<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource">
+		<property name="driverClassName" value="net.sf.log4jdbc.DriverSpy" />
+		<property name="url" value="jdbc:log4jdbc:oracle:thin:@127.0.0.1:1521:XE" />
+		<property name="username" value="scott" />
+		<property name="password" value="TIGER" />		
+		<property name="maxTotal" value="10" />			
+		<property name="maxIdle" value="10" />			
+		<property name="maxWaitMillis" value="3000" />	
+	</bean>
+			
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+ 		<property name="dataSource" ref="dataSource" />
+ 		<property name="mapperLocations" value="classpath:/mapper/*.xml" />
+ 		<property name="configLocation" value="classpath:/mybatis-config.xml" />
+ 	</bean>
+ 	
+ 	<!--
+ 		마이바티스에서 SQL작업을 수행하는 객체는 SqlSession
+		SqlSessionFactory가 SqlSession 생성을 책임진다
+		마이바티스 스프링 연동 모듈을 사용하면 SqlSessionTemplate을 이용해 SqlSession 작업을 자동화할 수 있다
+ 	-->
+ 	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+ 		<constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />
+ 	</bean>	
+ 	
+ 	<!-- DataSource를 기반으로 트랜잭션을 관리하는 객체 생성 -->
+ 	<bean class="org.springframework.jdbc.datasource.DataSourceTransactionManager" id="txManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!-- 마이바티스 DAO 객체를 생성하는 방법 2가지
+		클래스 + xml : @Repository 어노테이션을 걸면 <component-scan>을 이용해 스프링이 객체 생성
+		인터페이스 + xml, 인터페이스 : 마이바티스가 객체 생성 -> 인터페이스가 있는 폴더를 지정
+	-->
+	<mybatis-spring:scan base-package="com.icia.rboard2"/>	
+ 	
+ 	<!-- 클래스 간 변환을 담당 -->
+ 	<bean id="modelMapper" class="org.modelmapper.ModelMapper" />
+ 	
+ 	<!-- 날짜 문자열 변환 객체 -->
+ 	<bean id="timeFormat" class="java.text.SimpleDateFormat">
+ 		<constructor-arg value="yyyy-MM-dd hh:mm:ss" />
+ 	</bean>
+ 	<bean id="dateFormat" class="java.text.SimpleDateFormat">
+ 		<constructor-arg value="yyyy-MM-dd" />
+ 	</bean>
+ 	
+ 	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper" />
+ 	
+ 	<bean id="filterMultipartResolver"  class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+         <!-- 최대업로드 가능한 바이트크기 : 1MB-->
+         <property name="maxUploadSize" value="1048576" />
+	</bean>
+	
+	<context:component-scan base-package="com.icia.rboard2">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Repository"/>
+	</context:component-scan>
+	
+	<!-- 자바메일을 지원하는 스프링 메일 설정 -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="username" value="hasaway" />
+		<property name="password" value="hkd13579" />
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<prop key="mail.smtp.host">smtp.gmail.com</prop>
+				<prop key="mail.smtp.port">465</prop>
+				<prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop>
+				<prop key="mail.smtp.socketFactory.port">465</prop>
+				<prop key="mail.smtp.socketFactory.fallback">false</prop>
+				<prop key="mail.smtp.auth">true</prop> 
+				<prop key="mail.smtp.timeout">8500</prop>
+				<!-- log를 보고 싶다면 true. false로 하면 메일 관련 메시지가 나오지 않는다 -->
+				<prop key="mail.debug">true</prop>	
+			</props>
+		</property>
+	</bean>
+	<!--
+		쓰레드 최대 실행갯수 설정				  pool:미리 몇개 만들어놓고 빌려주는것
+										  커넥션 풀 : 커넥션을 미리 몇개 만들어놓고 빌려주는 것  
+		쓰레드를 미리 20개 만들어놓고 사용하게한다.
+	-->
+	<task:executor id="scheduledExecutor" pool-size="20"/> 
+	<task:annotation-driven executor="scheduledExecutor"/>
+</beans>
+
+
+
+
+
+
+
+
+

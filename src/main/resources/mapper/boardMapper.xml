@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.icia.rboard2.dao.BoardDao">
+	<!-- 
+		클래스를 사용할 때는 namespace 이름은 마음대로 붙인다 -> DAO쪽에서 namespace 이름을 이용해 xml을 부른다
+			tpl.selectOne("네임스페이스.id", 파라미터);
+		인터페이스를 사용할 때는 namespace 이름은 인터페이스 이름으로 지정해야만 한다 -> xml 쪽에서 DAO의 메소드를 부른다
+	-->
+	
+	<select id="countByWriter" resultType="int">
+		select  /*+ index_ffs(board board_pk_bno) */ count(bno) from board 
+		<where>
+			<if test="writer!=null">writer=#{writer}</if>
+		</where>
+	</select>
+	
+	<select id="findAll" resultType="board">
+	<![CDATA[
+	select * from
+		(select rownum as rnum, b.* from
+			(select /*+ index_desc(board board_pk_bno) */ bno, title, writer, write_time writeTime, read_cnt readCnt, comment_cnt commentCnt, attachment_cnt attachmentCnt from board) b
+		where rownum<=#{endRowNum})
+	where rnum>=#{startRowNum}
+	]]>
+	</select>
+	
+	<select id="findById" resultType="board">
+		select bno, title, content, writer, write_time writeTime, read_cnt readCnt, attachment_cnt attachmentCnt, good_cnt goodCnt, bad_cnt badCnt, 
+		comment_cnt commentCnt, delete_comment_cnt deleteCommentCnt from board where bno=#{bno} and rownum=1
+	</select>
+	
+	<insert id="insert">
+		<selectKey keyProperty="b.bno" resultType="int" order="BEFORE">
+			select board_seq.nextval from dual
+		</selectKey>
+		insert into board(bno, title, content, writer, write_time, read_cnt,  attachment_cnt, good_cnt, bad_cnt, comment_cnt, delete_comment_cnt) 
+		values(#{b.bno}, #{b.title}, #{b.content}, #{b.writer}, sysdate, 0, #{b.attachmentCnt}, 0, 0, 0, 0)
+	</insert>
+
+	<update id="update">
+		update board 
+		<trim suffixOverrides="," prefix="set">
+			<if test="b.title!=null">title=#{b.title},</if>
+			<if test="b.content!=null">content=#{b.content},</if>
+			<if test="b.readCnt!=null">read_cnt=read_cnt+1,</if>
+			<if test="b.attachmentCnt!=null">attachment_cnt=attachment_cnt-1,</if>
+			<if test="b.commentCnt!=null">comment_cnt=#{b.commentCnt},</if>
+			<if test="b.deleteCommentCnt!=null">delete_comment_cnt=delete_comment_cnt+1,</if>
+			<if test="b.goodCnt!=null">good_cnt=good_cnt+1,</if>
+			<if test="b.badCnt!=null">bad_cnt=bad_cnt+1,</if>
+		</trim>
+		where bno=#{b.bno} and rownum=1
+	</update>
+	
+	<delete id="deleteById">
+		delete from board where bno=#{bno} and rownum=1
+	</delete>
+</mapper>

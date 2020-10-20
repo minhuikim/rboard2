@@ -1,0 +1,100 @@
+drop table users;
+drop table authorities;
+drop table board;
+drop table comments;
+drop table attachment;
+drop table users_board;
+
+drop index comments_idx_bno;
+drop index attachment_idx_bno;
+
+drop sequence board_seq;
+drop sequence comment_seq;
+drop sequence attachment_seq;
+
+create table users (
+	username varchar2(10),
+	password char(60),
+	irum nvarchar2(10),
+	email varchar2(50),
+	joinday date, 
+	birthday date,
+	-- 로그인 실패 횟수가 5회가 되면 enabled를 false로 바꾸기위한 컬럼
+	login_failure_cnt number(1),
+	-- 로그인 횟수
+	login_cnt number(6),
+	-- 글 작성 수
+	write_cnt number(6),
+	enabled number(1),
+	profile varchar2(50),
+	-- 회원가입 후 이메일 인증을 수행하기 위한 컬럼
+	check_code varchar2(20),
+	constraint users_pk_username primary key(username)
+);
+
+create table authorities (
+	username varchar2(10),
+	authority varchar2(10),
+	constraint authorities_pk primary key(username, authority)
+);
+
+create table board (
+	bno number(6),
+	title nvarchar2(100),
+	content clob,
+	writer varchar2(10),
+	write_time date,
+	read_cnt number(6),
+	attachment_cnt number(2),
+	comment_cnt number(6),
+	delete_comment_cnt number(6),
+	good_cnt number(6),
+	bad_cnt number(6),
+	constraint board_pk_bno primary key(bno)
+);
+
+-- 첨부파일 테이블
+create table attachment (
+	ano number(7),
+	bno number(7),
+	writer varchar2(10),
+	original_file_name nvarchar2(100),
+	save_file_name nvarchar2(100),
+	length number(7),
+	is_image number(1),
+	constraint attachment_pk_ano primary key(ano)
+);
+
+-- 댓글 테이블
+create table comments (
+	cno number(7),
+	bno number(7),
+	writer varchar2(10),
+	content nvarchar2(100),
+	write_time date,
+	profile varchar2(50),
+	constraint comment_pk_cno primary key(cno)
+);
+
+-- 추천, 비추 테이블 : 중복 추천이나 비추 금지. 추천이나 비추 중 하나만 할 수 있음
+-- is_recommed가 1이면 추전, 0이면 비추
+create table users_board (
+	username varchar2(10),
+	bno number(7),
+	constraint users_board_pk primary key(username, bno)
+);
+
+create sequence board_seq minvalue 0;
+create sequence comment_seq minvalue 0;
+create sequence attachment_seq minvalue 0;
+
+create index comment_idx_bno on comments(bno);
+create index attachment_idx_bno on attachment(bno);
+
+select board_seq.nextval from dual;
+select comment_seq.nextval from dual;
+select attachment_seq.nextval from dual;
+
+commit;
+
+

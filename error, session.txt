@@ -1,0 +1,33 @@
+ControllerAdvice
+-예외가 발생했을 때 동작하는 컨트롤러
+-mvc의 경우
+	현재 문서에서 에러를 출력할 수 있다면
+		RedirectAttribute
+		HttpSession
+	에러 페이지의 디자인이 전혀 다르다
+		BoardNotFoundException 발생
+		컨트롤러 어드바이스에 의해 이동
+-Rest의 경우
+	서비스에서 작업결과를 true/false로 리턴하면
+		 컨트롤러에서 true->200 / false->409(오류가 발생하면 컨트롤러에서 409)
+	서비스에서 작업결과가 원하지 않는 결과일 때 예외 발생
+	불법적인 접근인 경우 예외 처리
+	
+Session
+- 인터셉터[작업리스트 6~7] : 출력전에 request로 옮기고 front에서 ""값을 session에 부여한다.(AOP)
+				    session -> interceptor -> request -> session : "" -> request 출력
+		 	filter(servlet)에서 직접 형변환을 해도 되지만 interceptor할 class를 하나 만들어주는게 좋다
+		 	filter에 설정할 경우
+		 		filter - DS -> I -> controller
+		 		doFilter(ServletRequest req, Servlet res) {
+		 			HttpServletRequest request = (httpServletRequest)req;
+		 			HttpSessionsession resurt;
+		 		}
+	
+- Session 삭제	 		
+- HttpSession
+ 	세션이 없는 상태에서 최초로 접근하면
+ 	session.setMaxlInactiveInterval()
+ 	session.invalidate()
+ 	
+ 	HttpSession session = request.getSession();

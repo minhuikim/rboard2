@@ -1,0 +1,77 @@
+### UserController ###
+1. 회원가입																○
+2. 메일발송																○
+3. 체크코드로 가입 확인/실패													○
+	- 확인하면 User 활성화 및 체크코드 삭제
+	- 실패하면 루트로 이동 후 RedirectAttributes를 이용해 에러 메시지 출력 
+	boolean result = service.checkCode(checkCode);
+	if(result==true) {
+		ra.addFlashAttribute("msg","환영 메시지");
+		return new ModelAndView("redirect:/user/login");
+	} else {
+		ra.addFlashAttribute("msg","체크코드를 확인할 수 없습니다.");
+		return new ModelAndView("redirect:/");
+	}
+	=> service에서 true/false분리 -> controller에서 받아서 -> 메세지 출력화면으로 이동
+4. 아이디 찾기 성공/실패														○
+	- 작업 후 RedirectAttributes를 이용해 결과 메시지 출력
+	String msg = service.findId();
+	if(msg!=null)	//if문 정하기
+		ra.addFlashAttribute("msg",msg);
+	else
+		ra.addFlashAttribute("msg", "아이디를 찾지 못했습니다.");
+	return new ModelAndView("redirect:/user/findId");
+	=>3, 4번 차이점 : 3번은 boolean결과에 따라 가는 곳이 다르고 4번은 결과와는 상관없이 가는곳이 같다.
+5. 비밀번호 리셋 - 임시비밀번호 저장 후 메일 발송									○
+	- 작업 후 RedirectAttributes를 이용해 결과 메시지 출력
+6. 로그인 실패 - session으로 메시지 전달 - 인터셉터								○
+	- /user/login으로 이동해 에러 메시지 출력
+7. 계정 블록 -  session으로 메시지 전달 - 인터셉터								○
+	- /user/login으로 이동해 에러 메시지 출력
+8. 비밀번호 확인															○
+	- 성공하면 내정보 보기로 이동
+	- 확인에 실패하면 RedirectAttributes를 이용해 에러 메시지 출력 
+9. 내정보 보기																○
+	- 실패하면 비밀번호 확인으로 이동 후 RedirectAttributes를 이용해 에러 메시지 출력 
+10. 회원 탈퇴																○
+	- 프사 삭제 후 users, authorities 테이블에서 삭제
+	- 삭제 후 로그아웃 처리
+	
+
+11. 아이디 확인															○
+12. 비밀번호 확인															○
+13. 정보 업데이트															○
+	- 이름만 변경
+	- 비밀번호만 변경
+	- 비밀번호를 제외한 전체 변경
+	- 비밀번호를 포함한 전제 변경
+14. 체크코드로 삭제
+	- @Scheduled를 이용해 일정 간격 또는 일정 시각에 메소드 실행
+
+
+15. 글 리스트/캐시 적용															○
+	- 캐시를 적용해 60초간 재실행 방지
+16. 글 작성/캐시 취소															○
+	- 1번 페이지에 대한 캐시를 취소
+17. 글 읽기																	○
+	- 글이 없을 경우 BoardNotFoundException 발생. ControllerAdvice 처리
+18. 글 변경																	○
+	- 글이 없거나 글쓴이가 아닐 경우 IllegalJobException 발생. ControllerAdvice 처리
+19. 글 삭제																	○
+	- 글이 없거나 글쓴이가 아닐 경우 IllegalJobException 발생. ControllerAdvice 처리
+
+
+20. 추천																		○
+	- 최초 추천인 경우에만 추천수 증가. 추천수를 다시 읽어 리턴
+21. 비추																		○
+	- 최초 비추인 경우에만 비추수 증가. 비추수를 다시 읽어 리턴
+22. 댓글 작성																	○
+	- 댓글 추가 후 글의 모든 댓글을 리턴
+23. 댓글 삭제																	○
+	- 글쓴이가 아닐 경우 IllegalJobRestException 발생. ControllerAdvice 처리
+24. 첨부파일 삭제																○
+	- 글쓴이가 아닐 경우 IllegalJobRestException 발생. ControllerAdvice 처리
+25. 첨부파일 보기																○
+	- 한글 파일 다운로드 처리 추가(https://www.manty.co.kr/bbs/detail/develop?id=12)
+26. 이미지 업로드																○
+	- csrf 추가
